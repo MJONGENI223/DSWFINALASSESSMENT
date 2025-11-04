@@ -37,9 +37,5 @@ A comprehensive hotel booking mobile application built with React Native, featur
 - Android Studio / Xcode (for emulators)
 - Firebase account
 
-### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd hotel-booking-app
+
