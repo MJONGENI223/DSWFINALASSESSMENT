@@ -12,31 +12,24 @@ const Stack = createStackNavigator();
 
 const AppContent = () => {
   const { user, loading } = useAuth();
-  const [isFirstLaunch, setIsFirstLaunch] = useState(null);
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(null);
 
   useEffect(() => {
-    checkFirstLaunch();
+    checkOnboardingStatus();
   }, []);
 
-  const checkFirstLaunch = async () => {
+  const checkOnboardingStatus = async () => {
     try {
-      const hasLaunched = await AsyncStorage.getItem('onboarding_complete');
-      
-      if (hasLaunched === 'true') {
-        setIsFirstLaunch(false);
-      } else {
-        setIsFirstLaunch(true);
-        if (hasLaunched === null) {
-          await AsyncStorage.setItem('onboarding_complete', 'true');
-        }
-      }
+      const onboardingComplete = await AsyncStorage.getItem('@onboarding_completed');
+      setIsOnboardingCompleted(onboardingComplete === 'true');
     } catch (error) {
-      console.error('Error checking first launch:', error);
-      setIsFirstLaunch(false);
+      console.error('Error checking onboarding status:', error);
+      setIsOnboardingCompleted(false);
     }
   };
 
-  if (loading || isFirstLaunch === null) {
+  // Show loading screen while checking auth and onboarding status
+  if (loading || isOnboardingCompleted === null) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -45,21 +38,26 @@ const AppContent = () => {
     );
   }
 
+  // Determine the initial route based on user authentication and onboarding status
+  let initialRouteName = 'Onboarding';
+  
+  if (user) {
+    initialRouteName = 'MainApp';
+  } else if (isOnboardingCompleted) {
+    initialRouteName = 'Auth';
+  }
+
+  console.log('Navigation Status:', { user: !!user, onboarding: isOnboardingCompleted, initialRoute: initialRouteName });
+
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Show onboarding ONLY on first launch when user is NOT logged in */}
-        {isFirstLaunch && !user ? (
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        ) : null}
-        
-        {/* If user is logged in, go directly to MainApp */}
-        {user ? (
-          <Stack.Screen name="MainApp" component={MainApp} />
-        ) : (
-          // If user is not logged in, show Auth screen
-          <Stack.Screen name="Auth" component={AuthScreen} />
-        )}
+      <Stack.Navigator 
+        initialRouteName={initialRouteName}
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="Auth" component={AuthScreen} />
+        <Stack.Screen name="MainApp" component={MainApp} />
       </Stack.Navigator>
     </NavigationContainer>
   );

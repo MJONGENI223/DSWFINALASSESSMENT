@@ -33,7 +33,7 @@ const ReviewScreen = () => {
       return;
     }
 
-    // In a real app, you would save this to your backend
+    
     setSubmitted(true);
     setTimeout(() => {
       navigation.goBack();

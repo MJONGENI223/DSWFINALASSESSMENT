@@ -1,4 +1,4 @@
-// Environment variables (in production, use react-native-config or similar)
+
 export const API_KEYS = {
     WEATHER_API: process.env.WEATHER_API_KEY || "your-weather-api-key",
     FAKE_STORE_API: "https://fakestoreapi.com",

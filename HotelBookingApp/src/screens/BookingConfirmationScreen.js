@@ -8,96 +8,103 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 const BookingConfirmationScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { booking } = route.params;
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+  const handleViewBookings = () => {
+   
+    navigation.navigate('Bookings');
+  };
+
+  const handleClose = () => {
+    
+    navigation.goBack();
+    
+   
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.successContainer}>
-          <Text style={styles.successEmoji}>🎉</Text>
-          <Text style={styles.successTitle}>Booking Confirmed!</Text>
-          <Text style={styles.successMessage}>
-            Your booking has been successfully confirmed
-          </Text>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={handleClose}
+        >
+          <Ionicons name="close" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Booking Confirmed</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      <ScrollView style={styles.content}>
+        <View style={styles.successIcon}>
+          <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
         </View>
+        
+        <Text style={styles.successTitle}>Booking Confirmed!</Text>
+        <Text style={styles.successMessage}>
+          Your booking at {booking.hotel.name} has been successfully confirmed.
+        </Text>
 
         <View style={styles.bookingDetails}>
           <Text style={styles.detailsTitle}>Booking Details</Text>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Hotel</Text>
+            <Text style={styles.detailLabel}>Hotel:</Text>
             <Text style={styles.detailValue}>{booking.hotel.name}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Location</Text>
+            <Text style={styles.detailLabel}>Location:</Text>
             <Text style={styles.detailValue}>{booking.hotel.location}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Check-in</Text>
-            <Text style={styles.detailValue}>{formatDate(booking.checkIn)}</Text>
+            <Text style={styles.detailLabel}>Check-in:</Text>
+            <Text style={styles.detailValue}>
+              {new Date(booking.checkIn).toLocaleDateString()}
+            </Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Check-out</Text>
-            <Text style={styles.detailValue}>{formatDate(booking.checkOut)}</Text>
+            <Text style={styles.detailLabel}>Check-out:</Text>
+            <Text style={styles.detailValue}>
+              {new Date(booking.checkOut).toLocaleDateString()}
+            </Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Guests</Text>
+            <Text style={styles.detailLabel}>Guests:</Text>
             <Text style={styles.detailValue}>{booking.guests}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Rooms</Text>
+            <Text style={styles.detailLabel}>Rooms:</Text>
             <Text style={styles.detailValue}>{booking.rooms}</Text>
           </View>
           
           <View style={[styles.detailRow, styles.totalRow]}>
-            <Text style={styles.totalLabel}>Total Amount</Text>
+            <Text style={styles.totalLabel}>Total:</Text>
             <Text style={styles.totalValue}>${booking.total}</Text>
           </View>
         </View>
 
         {booking.specialRequests && (
           <View style={styles.specialRequests}>
-            <Text style={styles.requestsTitle}>Special Requests</Text>
-            <Text style={styles.requestsText}>{booking.specialRequests}</Text>
+            <Text style={styles.requestsLabel}>Special Requests:</Text>
+            <Text style={styles.requestsValue}>{booking.specialRequests}</Text>
           </View>
         )}
-
-        <View style={styles.nextSteps}>
-          <Text style={styles.nextStepsTitle}>What's Next?</Text>
-          <Text style={styles.nextStep}>• You will receive a confirmation email</Text>
-          <Text style={styles.nextStep}>• Check-in time is from 3:00 PM</Text>
-          <Text style={styles.nextStep}>• Present your ID at check-in</Text>
-        </View>
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.homeButton}
-          onPress={() => navigation.navigate('ExploreTab')}
-        >
-          <Text style={styles.homeButtonText}>Back to Home</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
+        <TouchableOpacity 
           style={styles.bookingsButton}
-          onPress={() => navigation.navigate('Profile')}
+          onPress={handleViewBookings}
         >
           <Text style={styles.bookingsButtonText}>View My Bookings</Text>
         </TouchableOpacity>
@@ -111,140 +118,114 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  scrollContent: {
-    flexGrow: 1,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  placeholder: {
+    width: 32,
+  },
+  content: {
+    flex: 1,
     padding: 20,
   },
-  successContainer: {
+  successIcon: {
     alignItems: 'center',
-    padding: 40,
-  },
-  successEmoji: {
-    fontSize: 80,
-    marginBottom: 20,
+    marginVertical: 20,
   },
   successTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
     textAlign: 'center',
+    marginBottom: 10,
   },
   successMessage: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
-    lineHeight: 24,
+    color: '#666',
+    marginBottom: 30,
+    lineHeight: 22,
   },
   bookingDetails: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f8f9fa',
     padding: 20,
     borderRadius: 12,
     marginBottom: 20,
   },
   detailsTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 15,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    marginBottom: 10,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
     fontWeight: '500',
   },
   detailValue: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
   },
   totalRow: {
-    borderBottomWidth: 0,
-    marginTop: 10,
-    paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    borderTopColor: '#e0e0e0',
+    paddingTop: 10,
+    marginTop: 5,
   },
   totalLabel: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
   totalValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#007AFF',
   },
   specialRequests: {
-    backgroundColor: '#f0f8ff',
+    backgroundColor: '#f8f9fa',
     padding: 20,
     borderRadius: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#007AFF',
   },
-  requestsTitle: {
+  requestsLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007AFF',
     marginBottom: 8,
   },
-  requestsText: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
-  nextSteps: {
-    backgroundColor: '#f9f9f9',
-    padding: 20,
-    borderRadius: 12,
-  },
-  nextStepsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  nextStep: {
+  requestsValue: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 5,
     lineHeight: 20,
   },
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    backgroundColor: '#fff',
-    gap: 10,
-  },
-  homeButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  homeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    borderTopColor: '#e0e0e0',
   },
   bookingsButton: {
-    backgroundColor: '#f0f0f0',
-    padding: 15,
+    backgroundColor: '#007AFF',
+    padding: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
   bookingsButtonText: {
-    color: '#007AFF',
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

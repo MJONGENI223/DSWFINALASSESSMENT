@@ -2,20 +2,25 @@ import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
+  TouchableOpacity,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
   TextInput,
   ActivityIndicator,
+  Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 
-const ExploreScreen = () => {
-  const navigation = useNavigation();
+import grandPlaza from '../../assets/Images/ExplorePage/grand_plaza.png';
+import seasideResort from '../../assets/Images/ExplorePage/seaside_resort.png';
+import mountainLodge from '../../assets/Images/ExplorePage/mountain_lodge.png';
+import cityView from '../../assets/Images/ExplorePage/city_view.png';
+import luxuryBoutique from '../../assets/Images/ExplorePage/luxury_boutique.png';
+import gardenInn from '../../assets/Images/ExplorePage/garden_inn.png';
+
+const ExploreScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('default');
+  const [filterBy, setFilterBy] = useState('all');
   const [loading, setLoading] = useState(false);
 
   const sampleHotels = [
@@ -25,8 +30,7 @@ const ExploreScreen = () => {
       location: 'New York, NY',
       rating: 4.5,
       price: 299,
-      image: 'Group 10117.png',
-      description: 'Luxury hotel in the heart of Manhattan',
+      image: grandPlaza,
       amenities: ['WiFi', 'Pool', 'Spa', 'Gym'],
     },
     {
@@ -35,9 +39,8 @@ const ExploreScreen = () => {
       location: 'Miami, FL',
       rating: 4.2,
       price: 199,
-      image: 'Group 10118.png',
-      description: 'Beautiful beachfront resort with ocean views',
-      amenities: ['Beach', 'Pool', 'Restaurant', 'Bar'],
+      image: seasideResort,
+      amenities: ['Beach', 'Pool', 'Restaurant'],
     },
     {
       id: '3',
@@ -45,9 +48,8 @@ const ExploreScreen = () => {
       location: 'Aspen, CO',
       rating: 4.7,
       price: 349,
-      image: 'Group 10127.png',
-      description: 'Cozy lodge with stunning mountain views',
-      amenities: ['Fireplace', 'Ski-in/Ski-out', 'Hot Tub', 'Restaurant'],
+      image: mountainLodge,
+      amenities: ['Fireplace', 'Ski-in/Ski-out', 'Hot Tub'],
     },
     {
       id: '4',
@@ -55,16 +57,32 @@ const ExploreScreen = () => {
       location: 'Chicago, IL',
       rating: 4.0,
       price: 179,
-      image: 'image-1-3.png',
-      description: 'Modern hotel with panoramic city views',
-      amenities: ['WiFi', 'Gym', 'Business Center', 'Restaurant'],
+      image: cityView,
+      amenities: ['WiFi', 'Gym', 'Business Center'],
+    },
+    {
+      id: '5',
+      name: 'Luxury Boutique Hotel',
+      location: 'San Francisco, CA',
+      rating: 4.8,
+      price: 399,
+      image: luxuryBoutique,
+      amenities: ['Spa', 'Fine Dining', 'Concierge'],
+    },
+    {
+      id: '6',
+      name: 'Garden Inn',
+      location: 'Portland, OR',
+      rating: 4.3,
+      price: 159,
+      image: gardenInn,
+      amenities: ['Garden', 'Restaurant', 'Free Parking'],
     },
   ];
 
   const filteredAndSortedHotels = useMemo(() => {
     let filtered = sampleHotels;
 
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
         hotel =>
@@ -73,7 +91,14 @@ const ExploreScreen = () => {
       );
     }
 
-    // Sort hotels
+    if (filterBy === 'budget' && filtered.length > 0) {
+      const avgPrice = filtered.reduce((sum, hotel) => sum + hotel.price, 0) / filtered.length;
+      filtered = filtered.filter(hotel => hotel.price <= avgPrice);
+    } else if (filterBy === 'luxury' && filtered.length > 0) {
+      const avgPrice = filtered.reduce((sum, hotel) => sum + hotel.price, 0) / filtered.length;
+      filtered = filtered.filter(hotel => hotel.price > avgPrice);
+    }
+
     switch (sortBy) {
       case 'price-low':
         return [...filtered].sort((a, b) => a.price - b.price);
@@ -84,19 +109,23 @@ const ExploreScreen = () => {
       default:
         return filtered;
     }
-  }, [searchQuery, sortBy]);
+  }, [searchQuery, sortBy, filterBy]);
 
-  const navigateToHotelDetails = (hotel) => {
+  const handleHotelPress = (hotel) => {
     navigation.navigate('HotelDetails', { hotel });
   };
 
   const renderHotelCard = ({ item }) => (
-    <TouchableOpacity
+    <TouchableOpacity 
       style={styles.hotelCard}
-      onPress={() => navigateToHotelDetails(item)}
+      onPress={() => handleHotelPress(item)}
     >
       <View style={styles.hotelImage}>
-        <Text style={styles.hotelEmoji}>{item.image}</Text>
+        <Image
+          source={item.image}
+          style={{ width: 80, height: 80, borderRadius: 8 }}
+          resizeMode="cover"
+        />
       </View>
       <View style={styles.hotelInfo}>
         <Text style={styles.hotelName}>{item.name}</Text>
@@ -104,11 +133,15 @@ const ExploreScreen = () => {
         <View style={styles.ratingContainer}>
           <Text style={styles.rating}>⭐ {item.rating}</Text>
         </View>
-        <Text style={styles.hotelDescription}>{item.description}</Text>
-        <View style={styles.priceContainer}>
-          <Text style={styles.price}>${item.price}</Text>
-          <Text style={styles.priceLabel}>/night</Text>
+        <View style={styles.amenitiesContainer}>
+          {item.amenities.slice(0, 2).map((amenity, index) => (
+            <Text key={index} style={styles.amenity}>• {amenity}</Text>
+          ))}
+          {item.amenities.length > 2 && (
+            <Text style={styles.moreAmenities}>+{item.amenities.length - 2} more</Text>
+          )}
         </View>
+        <Text style={styles.price}>${item.price}/night</Text>
       </View>
     </TouchableOpacity>
   );
@@ -123,12 +156,10 @@ const ExploreScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Find Your Stay</Text>
-        <Text style={styles.headerSubtitle}>
-          Discover amazing hotels and resorts
-        </Text>
+        <Text style={styles.title}>Find Your Stay</Text>
+        <Text style={styles.subtitle}>Discover amazing hotels and resorts</Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -170,6 +201,35 @@ const ExploreScreen = () => {
         </View>
       </View>
 
+      <View style={styles.filterContainer}>
+        <Text style={styles.filterLabel}>Filter by:</Text>
+        <View style={styles.filterButtons}>
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'budget', label: 'Budget' },
+            { key: 'luxury', label: 'Luxury' },
+          ].map((filter) => (
+            <TouchableOpacity
+              key={filter.key}
+              style={[
+                styles.filterButton,
+                filterBy === filter.key && styles.filterButtonActive,
+              ]}
+              onPress={() => setFilterBy(filter.key)}
+            >
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  filterBy === filter.key && styles.filterButtonTextActive,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
@@ -185,7 +245,7 @@ const ExploreScreen = () => {
           ListEmptyComponent={renderEmptyList}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -198,12 +258,12 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 10,
   },
-  headerTitle: {
+  title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
   },
-  headerSubtitle: {
+  subtitle: {
     fontSize: 16,
     color: '#666',
     marginTop: 4,
@@ -211,6 +271,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     padding: 20,
     paddingTop: 10,
+    paddingBottom: 0,
   },
   searchInput: {
     borderWidth: 1,
@@ -222,7 +283,8 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     padding: 20,
-    paddingTop: 0,
+    paddingTop: 10,
+    paddingBottom: 0,
   },
   filterLabel: {
     fontSize: 16,
@@ -256,7 +318,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 20,
-    paddingTop: 0,
+    paddingTop: 10,
   },
   hotelCard: {
     flexDirection: 'row',
@@ -281,9 +343,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 15,
   },
-  hotelEmoji: {
-    fontSize: 40,
-  },
   hotelInfo: {
     flex: 1,
   },
@@ -299,8 +358,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 6,
   },
   rating: {
@@ -308,25 +365,24 @@ const styles = StyleSheet.create({
     color: '#ff9500',
     fontWeight: '600',
   },
-  hotelDescription: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 8,
-    lineHeight: 16,
-  },
-  priceContainer: {
+  amenitiesContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    flexWrap: 'wrap',
+    marginBottom: 8,
   },
-  price: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  priceLabel: {
+  amenity: {
     fontSize: 12,
     color: '#666',
-    marginLeft: 4,
+    marginRight: 8,
+  },
+  moreAmenities: {
+    fontSize: 12,
+    color: '#007AFF',
+  },
+  price: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
   loadingContainer: {
     flex: 1,

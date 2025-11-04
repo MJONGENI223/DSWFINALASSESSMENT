@@ -6,155 +6,152 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  SafeAreaView,
   ActivityIndicator,
+  Alert,
   RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { recommendationsService } from '../services/apiService';
+import { Ionicons } from '@expo/vector-icons';
+import { fakeStoreAPI } from '../services/apiService';
 
-const DealsScreen = () => {
-  const navigation = useNavigation();
+const DealsScreen = ({ navigation }) => {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadDeals();
-  }, []);
-
-  const loadDeals = async () => {
+  const fetchDeals = async () => {
     try {
-      setError('');
-      const dealsData = await recommendationsService.getDeals();
-      setDeals(dealsData);
-    } catch (error) {
+      setError(null);
+      const products = await fakeStoreAPI.getProducts();
+      
+      
+      const transformedDeals = products.map(product => ({
+        id: product.id.toString(),
+        name: product.title,
+        location: getRandomCity(),
+        rating: (Math.random() * 2 + 3).toFixed(1), 
+        price: Math.round(product.price * 10), 
+        originalPrice: Math.round(product.price * 15),
+        image: product.image,
+        category: product.category,
+        description: product.description,
+        amenities: getRandomAmenities(),
+        discount: Math.round(Math.random() * 30 + 10), 
+      }));
+      
+      setDeals(transformedDeals);
+    } catch (err) {
       setError('Failed to load deals. Please try again.');
-      console.error('Error loading deals:', error);
+      console.error('Error fetching deals:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+  const getRandomCity = () => {
+    const cities = ['New York', 'Miami', 'Los Angeles', 'Chicago', 'Las Vegas', 'San Francisco', 'Orlando', 'Seattle'];
+    return cities[Math.floor(Math.random() * cities.length)];
+  };
+
+  const getRandomAmenities = () => {
+    const allAmenities = ['WiFi', 'Pool', 'Spa', 'Gym', 'Breakfast', 'Parking', 'Restaurant', 'Bar'];
+    return allAmenities.sort(() => 0.5 - Math.random()).slice(0, 4);
+  };
+
+  useEffect(() => {
+    fetchDeals();
+  }, []);
+
   const onRefresh = () => {
     setRefreshing(true);
-    loadDeals();
+    fetchDeals();
   };
 
-  const navigateToHotelDetails = (hotel) => {
-    navigation.navigate('HotelDetails', { 
-      hotel: {
-        ...hotel,
-        amenities: ['WiFi', 'Pool', 'Spa', 'Gym'], // Default amenities
-      }
-    });
-  };
-
-  const renderDealCard = ({ item }) => (
+  const renderDealItem = ({ item }) => (
     <TouchableOpacity
       style={styles.dealCard}
-      onPress={() => navigateToHotelDetails(item)}
+      onPress={() => navigation.navigate('DealDetails', { deal: item })}
     >
-      <Image source={{ uri: item.image }} style={styles.dealImage} />
-      
-      <View style={styles.dealBadge}>
-        <Text style={styles.dealBadgeText}>HOT DEAL</Text>
+      <View style={styles.dealHeader}>
+        <View style={styles.discountBadge}>
+          <Text style={styles.discountText}>-{item.discount}%</Text>
+        </View>
+        <Image source={{ uri: item.image }} style={styles.dealImage} />
       </View>
-
+      
       <View style={styles.dealInfo}>
-        <Text style={styles.dealName}>{item.name}</Text>
+        <Text style={styles.dealName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.dealLocation}>{item.location}</Text>
         
         <View style={styles.ratingContainer}>
-          <Text style={styles.rating}>⭐ {item.rating}</Text>
+          <Ionicons name="star" size={16} color="#FFD700" />
+          <Text style={styles.rating}>{item.rating}</Text>
         </View>
-
+        
+        <View style={styles.amenitiesContainer}>
+          {item.amenities.slice(0, 3).map((amenity, index) => (
+            <View key={index} style={styles.amenity}>
+              <Text style={styles.amenityText}>{amenity}</Text>
+            </View>
+          ))}
+        </View>
+        
         <View style={styles.priceContainer}>
           <View style={styles.priceWrapper}>
             <Text style={styles.currentPrice}>${item.price}</Text>
-            <Text style={styles.priceLabel}>/night</Text>
+            <Text style={styles.originalPrice}>${item.originalPrice}</Text>
+            <Text style={styles.nightLabel}>/night</Text>
           </View>
-          <Text style={styles.originalPrice}>${item.originalPrice}</Text>
-        </View>
-
-        <Text style={styles.dealDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-
-        <View style={styles.savingsBadge}>
-          <Text style={styles.savingsText}>
-            Save ${item.originalPrice - item.price}
-          </Text>
+          <Text style={styles.dealTag}>Special Deal</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
-  const renderEmptyList = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>No Deals Available</Text>
-      <Text style={styles.emptyText}>
-        Check back later for amazing hotel deals!
-      </Text>
-    </View>
-  );
-
-  const renderError = () => (
-    <View style={styles.errorContainer}>
-      <Text style={styles.errorTitle}>Something went wrong</Text>
-      <Text style={styles.errorText}>{error}</Text>
-      <TouchableOpacity style={styles.retryButton} onPress={loadDeals}>
-        <Text style={styles.retryButtonText}>Try Again</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading amazing deals...</Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#003580" />
+        <Text style={styles.loadingText}>Loading amazing deals...</Text>
+      </View>
     );
   }
 
-  if (error && deals.length === 0) {
+  if (error) {
     return (
-      <SafeAreaView style={styles.container}>
-        {renderError()}
-      </SafeAreaView>
+      <View style={styles.centerContainer}>
+        <Ionicons name="sad-outline" size={64} color="#ccc" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchDeals}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Special Deals</Text>
-        <Text style={styles.headerSubtitle}>
-          Limited time offers on amazing hotels
-        </Text>
+        <Text style={styles.title}>Special Deals</Text>
+        <Text style={styles.subtitle}>Limited time offers on amazing hotels</Text>
       </View>
 
       <FlatList
         data={deals}
-        renderItem={renderDealCard}
+        renderItem={renderDealItem}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmptyList}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#007AFF']}
+            colors={['#003580']}
           />
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -163,72 +160,95 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
-  },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 16,
+    fontSize: 16,
     color: '#666',
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#003580',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  header: {
+    padding: 20,
+    backgroundColor: '#003580',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#e6f2ff',
   },
   listContent: {
-    padding: 20,
-    paddingTop: 0,
+    padding: 16,
   },
   dealCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e6e6e6',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 3,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
     overflow: 'hidden',
   },
-  dealImage: {
-    width: '100%',
-    height: 200,
-    resizeMode: 'cover',
+  dealHeader: {
+    position: 'relative',
   },
-  dealBadge: {
+  discountBadge: {
     position: 'absolute',
-    top: 15,
-    left: 15,
+    top: 12,
+    left: 12,
     backgroundColor: '#FF3B30',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    zIndex: 1,
   },
-  dealBadgeText: {
+  discountText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
   },
+  dealImage: {
+    width: '100%',
+    height: 200,
+  },
   dealInfo: {
-    padding: 15,
+    padding: 16,
   },
   dealName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#262626',
     marginBottom: 4,
   },
   dealLocation: {
@@ -237,98 +257,65 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   ratingContainer: {
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   rating: {
     fontSize: 14,
-    color: '#ff9500',
-    fontWeight: '600',
+    color: '#666',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  amenitiesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  amenity: {
+    backgroundColor: '#f0f8ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  amenityText: {
+    fontSize: 12,
+    color: '#003580',
+    fontWeight: '500',
   },
   priceContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
   },
   priceWrapper: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
   currentPrice: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  priceLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
+    color: '#003580',
+    marginRight: 8,
   },
   originalPrice: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#999',
     textDecorationLine: 'line-through',
+    marginRight: 4,
   },
-  dealDescription: {
+  nightLabel: {
     fontSize: 12,
-    color: '#888',
-    lineHeight: 16,
-    marginBottom: 8,
+    color: '#666',
   },
-  savingsBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#34C759',
+  dealTag: {
+    backgroundColor: '#e6f7ee',
+    color: '#009944',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-  },
-  savingsText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 6,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
   },
 });

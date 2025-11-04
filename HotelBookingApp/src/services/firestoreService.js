@@ -15,9 +15,9 @@ import {
   import { db } from '../config/firebase';
   import { COLLECTIONS } from '../config/constants';
   
-  // User operations
+ 
   export const userService = {
-    // Create or update user profile
+    
     createUserProfile: async (userId, userData) => {
       try {
         await setDoc(doc(db, COLLECTIONS.USERS, userId), {
@@ -31,7 +31,7 @@ import {
       }
     },
   
-    // Get user profile
+  
     getUserProfile: async (userId) => {
       try {
         const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId));
@@ -42,7 +42,7 @@ import {
       }
     },
   
-    // Update user profile
+  
     updateUserProfile: async (userId, updates) => {
       try {
         await updateDoc(doc(db, COLLECTIONS.USERS, userId), {
@@ -56,9 +56,9 @@ import {
     },
   };
   
-  // Booking operations
+ 
   export const bookingService = {
-    // Create a new booking
+   
     createBooking: async (userId, bookingData) => {
       try {
         const bookingRef = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.BOOKINGS);
@@ -78,7 +78,7 @@ import {
       }
     },
   
-    // Get user bookings
+  
     getUserBookings: async (userId) => {
       try {
         const bookingsRef = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.BOOKINGS);
@@ -95,7 +95,7 @@ import {
       }
     },
   
-    // Real-time listener for user bookings
+    
     subscribeToUserBookings: (userId, callback) => {
       const bookingsRef = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.BOOKINGS);
       const q = query(bookingsRef, orderBy('createdAt', 'desc'));
@@ -109,7 +109,7 @@ import {
       });
     },
   
-    // Update booking status
+  
     updateBookingStatus: async (userId, bookingId, status) => {
       try {
         const bookingRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.BOOKINGS, bookingId);
@@ -124,9 +124,9 @@ import {
     },
   };
   
-  // Review operations
+  
   export const reviewService = {
-    // Add a review for a hotel
+  
     addReview: async (hotelId, reviewData) => {
       try {
         const reviewsRef = collection(db, COLLECTIONS.HOTELS, hotelId, COLLECTIONS.REVIEWS);
@@ -144,7 +144,7 @@ import {
       }
     },
   
-    // Get reviews for a hotel
+    
     getHotelReviews: async (hotelId) => {
       try {
         const reviewsRef = collection(db, COLLECTIONS.HOTELS, hotelId, COLLECTIONS.REVIEWS);
@@ -161,7 +161,7 @@ import {
       }
     },
   
-    // Real-time listener for hotel reviews
+    
     subscribeToHotelReviews: (hotelId, callback) => {
       const reviewsRef = collection(db, COLLECTIONS.HOTELS, hotelId, COLLECTIONS.REVIEWS);
       const q = query(reviewsRef, orderBy('createdAt', 'desc'));
@@ -175,7 +175,7 @@ import {
       });
     },
   
-    // Check if user has already reviewed a hotel
+    
     getUserReviewForHotel: async (hotelId, userId) => {
       try {
         const reviewsRef = collection(db, COLLECTIONS.HOTELS, hotelId, COLLECTIONS.REVIEWS);
@@ -193,9 +193,9 @@ import {
     },
   };
   
-  // Hotel operations
+  
   export const hotelService = {
-    // Get all hotels
+    
     getHotels: async () => {
       try {
         const hotelsRef = collection(db, COLLECTIONS.HOTELS);
@@ -211,7 +211,7 @@ import {
       }
     },
   
-    // Get hotel by ID
+  
     getHotelById: async (hotelId) => {
       try {
         const hotelDoc = await getDoc(doc(db, COLLECTIONS.HOTELS, hotelId));
@@ -222,7 +222,7 @@ import {
       }
     },
   
-    // Real-time listener for hotels
+    
     subscribeToHotels: (callback) => {
       const hotelsRef = collection(db, COLLECTIONS.HOTELS);
       

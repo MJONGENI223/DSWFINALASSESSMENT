@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -19,40 +20,65 @@ const OnboardingScreen = () => {
     {
       id: 1,
       title: 'Discover Amazing Hotels',
-      description: 'Find and book the perfect hotel for your next trip',
-      image: 'Onboarding 1.png',
+      description: 'Find and book the perfect hotel for your next trip with our extensive collection',
+      image: require('../../assets/Images/OnboardingPage/Onboarding1.png'), 
     },
     {
       id: 2,
       title: 'Easy Booking Process',
-      description: 'Book your stay in just a few simple steps',
-      image: 'Onboarding 2.png',
+      description: 'Book your stay in just a few simple steps with our intuitive interface',
+      image: require('../../assets/Images/OnboardingPage/Onboarding2.png'), 
     },
     {
       id: 3,
       title: 'Read Genuine Reviews',
-      description: 'Make informed decisions with real guest reviews',
-      image: 'Onboarding 3.png',
+      description: 'Make informed decisions with real guest reviews and ratings',
+      image: require('../../assets/Images/OnboardingPage/Onboarding3.png'), 
     },
   ];
 
-  const [currentSlide, setCurrentSlide] = React.useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const completeOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem('@onboarding_completed', 'true');
+      navigation.navigate('Auth'); 
+    } catch (error) {
+      console.error('Error saving onboarding status:', error);
+    }
+  };
 
   const goToNextSlide = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      navigation.navigate('Auth');
+      completeOnboarding();
     }
+  };
+
+  const skipOnboarding = () => {
+    completeOnboarding();
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Skip Button */}
+      <TouchableOpacity style={styles.skipButton} onPress={skipOnboarding}>
+        <Text style={styles.skipText}>Skip</Text>
+      </TouchableOpacity>
+
       <View style={styles.slideContainer}>
-        <Text style={styles.emoji}>{slides[currentSlide].image}</Text>
+        {/* Image */}
+        <Image 
+          source={slides[currentSlide].image} 
+          style={styles.image}
+          resizeMode="contain"
+        />
+        
         <Text style={styles.title}>{slides[currentSlide].title}</Text>
         <Text style={styles.description}>{slides[currentSlide].description}</Text>
         
+        {/* Indicators */}
         <View style={styles.indicatorContainer}>
           {slides.map((_, index) => (
             <View
@@ -65,6 +91,7 @@ const OnboardingScreen = () => {
           ))}
         </View>
 
+        {/* Next/Get Started Button */}
         <TouchableOpacity style={styles.button} onPress={goToNextSlide}>
           <Text style={styles.buttonText}>
             {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
@@ -80,15 +107,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  skipButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+  },
+  skipText: {
+    color: '#007AFF',
+    fontSize: 16,
+    fontWeight: '500',
+  },
   slideContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 30,
+    paddingTop: 80,
   },
-  emoji: {
-    fontSize: 80,
-    marginBottom: 30,
+  image: {
+    width: width * 0.8,
+    height: height * 0.4,
+    marginBottom: 40,
   },
   title: {
     fontSize: 28,
@@ -103,6 +144,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 40,
     lineHeight: 24,
+    paddingHorizontal: 20,
   },
   indicatorContainer: {
     flexDirection: 'row',
@@ -124,6 +166,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,
+    minWidth: 150,
+    alignItems: 'center',
   },
   buttonText: {
     color: '#fff',

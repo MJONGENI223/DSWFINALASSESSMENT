@@ -40,7 +40,7 @@ const ProfileScreen = () => {
     if (user) {
       loadUserBookings();
       
-      // Subscribe to real-time updates
+      
       const unsubscribe = bookingService.subscribeToUserBookings(user.uid, (bookings) => {
         setUserBookings(bookings);
         setLoading(false);
@@ -261,9 +261,9 @@ const ProfileScreen = () => {
   );
 };
 
-// Add to styles:
+
 const styles = StyleSheet.create({
-  // ... previous styles
+ 
   loadingContainer: {
     alignItems: 'center',
     padding: 20,
